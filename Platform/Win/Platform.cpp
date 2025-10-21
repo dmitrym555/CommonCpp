@@ -22,7 +22,7 @@ std::string KSExtractFilePath(const std::string& filePath) {
     return res;
 };
 
-char* psep() {
+const char* psep() {
     return "\\";
 }
 
@@ -71,6 +71,15 @@ int CLMakeSocket( CLSocketType stype ) {
     return sock;
 }
 
+std::string getBinPath() {
+    char pathBuffer[MAX_PATH];
+    GetModuleFileName( NULL, pathBuffer, sizeof(pathBuffer) );
+
+    std::string res = std::string( pathBuffer);
+
+    return res;
+}
+
 
 void CLCloseSocket( int socket ) {
     closesocket(socket);
@@ -90,6 +99,33 @@ int CLFdWait( int fd, int timeout ) {
 
     return res;
 }
+
+
+CLProcStat::CLProcStat() {
+    init();
+}
+
+void CLProcStat::init() {
+    //FILE* file = fopen( "/proc/stat", "r" );
+    //int res = fscanf(file, "cpu %llu %llu %llu %llu", &lastTotalUser, &lastTotalUserLow,
+    //    &lastTotalSys, &lastTotalIdle);
+    //fclose(file);
+    //if ( res ) {
+    //    res = 0;
+    //}
+}
+
+double CLProcStat::getCurrentCPULoad() {
+    double percent = 15;
+
+    return percent;
+}
+
+CLProcStat& procStat() {
+    static CLProcStat inst;
+    return inst;
+}
+
 
 
 
