@@ -1,0 +1,54 @@
+#! /usr/bin/env python3
+
+import subprocess
+import os
+
+
+def findadv(strin, what):
+    index = strin.find( what )
+    if ( index != -1 ):
+        index += len( what )
+    return index
+
+
+svninfo = subprocess.getoutput('svn info')
+
+idx1 = findadv( svninfo, "Repository Root: ");
+idx2 = svninfo.find("\n", idx1);
+
+svnurl = svninfo[idx1:idx2]
+
+print( svnurl )
+
+svnlog = subprocess.getoutput('svn log -l 1 -v')
+
+print( svnlog )
+
+idx1 = svnlog.find( "r" )
+idx2 = svnlog.find( " ", idx1 );
+
+rev = svnlog[idx1:idx2]
+
+idx1 = findadv( svnlog, "Changed paths:\n")
+idx2 = svnlog.find("\n\n");
+
+sfiles = svnlog[idx1:idx2]
+
+
+files = sfiles.split("\n")
+
+i = 0
+for f in files:
+    print( "{}: {}".format(i, f) )
+    i += 1
+
+while 1:
+    text = input(">")
+
+    url = svnurl + files[int(text)][5:]
+
+    subprocess.getoutput("svn diff -c {} {}".format(rev, url) )
+
+
+
+

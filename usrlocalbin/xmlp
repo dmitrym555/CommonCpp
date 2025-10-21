@@ -1,0 +1,5 @@
+#!/bin/bash
+
+tidy --utf8 $1 > $1.new
+
+
