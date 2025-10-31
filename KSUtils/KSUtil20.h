@@ -27,18 +27,26 @@ int stringScan( const std::string& str, int searchStart, T& outVal, const char* 
     return str.length();
 };
 
+double KSStr2Double(const std::string& str );
 
 template <typename T> T convert_to (const std::string& str) {
     if constexpr (std::is_same_v<T, std::string>) {
         return str;
     }
     else if constexpr ( std::is_same_v<T, bool> ) {
-        bool res = ( str == "1" || str == "true" || str == "True" || str == "TRUE" );
-        return res;
+        bool bres = ( str == "1" || str == "true" || str == "True" || str == "TRUE" );
+        return bres;
+    }
+    else if constexpr ( std::is_same_v<T, float> ) {
+        return KSStr2Double(str);
+    }
+    else if constexpr ( std::is_same_v<T, double> ) {
+        return KSStr2Double(str);
     }
     else {
+        T res;
         int radix = str.starts_with("0x")? 16:10;
-        T res = (T)std::stol( str, 0, radix );
+        res = (T)std::stol( str, 0, radix );
 //        std::istringstream ss(str);
 //        T num;
 //        ss >> num;
