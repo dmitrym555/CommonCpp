@@ -13,8 +13,8 @@
 
 class KSConf {
     KSConfParser& m_conf = *KSConfParser::inst();
-    std::map<std::string, std::string> clargs;
 public:
+    std::map<std::string, std::string> m_clargs;
     void init(int argc, char *argv[], const char* confFile=nullptr );
     std::string get( const char* name, const char* defVal=nullptr );
 };

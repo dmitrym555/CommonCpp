@@ -46,6 +46,8 @@ struct KLParamH {
     byte Type:3;
 
     KLParamH(): Quality(KLPARAM_QUALITY_BAD) { Flags = 0; Type=0; }
+
+    bool isgood();
 };
 
 // структура состояния параметра (тега) KLogic
@@ -101,6 +103,8 @@ struct KSPARAM : public KLParamH
     }
 
     std::string getString();
+
+    std::string displayString();
 
 };
 

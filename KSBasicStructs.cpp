@@ -9,6 +9,12 @@
 
 
 
+bool KLParamH::isgood() {
+    bool res = Quality == KLPARAM_QUALITY_GOOD;
+    return res;
+}
+
+
 int KSPARAMWITHDESCR::getZoneStatus() {
     if ( id.paramFields.ParamType == KLIOTYPE_BOOLEAN ) {
         return ( param.Value.Boolean )? 3:-3;
@@ -164,8 +170,16 @@ void KSPARAM::Assign(const KSPARAM& other) {
             }
         }
     }
+    this->Type = thisType;
 }
 
+std::string KSPARAM::displayString() {
+    std::string res;
+    if ( Quality != KLPARAM_QUALITY_GOOD ) {
+        return std::format( "error: quality is bad" );
+    }
+    return getString();
+}
 
 std::string KSPARAM::getString() {
     std::string res = "0";
@@ -218,6 +232,8 @@ bool KSPARAMWithCtrlId::setAddr( const std::string& straddr ) {
     kspd.id.paramFields.IecID = std::stoi( parts[3] );
     return true;
 }
+
+
 
 
 

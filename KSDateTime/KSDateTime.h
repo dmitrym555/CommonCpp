@@ -166,12 +166,20 @@ void cp56dtToFILETIME(const CP56TIME2A& ts, uint64_t& ft);
 void cp56dtToRDATETIME(const CP56TIME2A& ts, RDATETIME& rdt);
 
 std::chrono::system_clock::time_point tp2000();
-uint64_t KSTime( std::chrono::system_clock::time_point tp );
+
+template<class T>
+uint64_t KSTime( std::chrono::time_point<T> tp ) {
+    using namespace std::chrono;
+    uint64_t res = duration_cast<std::chrono::milliseconds>( tp.time_since_epoch() - tp2000().time_since_epoch() ).count();
+    return res;
+}
+
 time_t makeTime_t( const std::string& stime );
 uint64_t KSTime( const std::string& stime );
 uint64_t KSTimeFromDate( const std::string& sdate, int delimiterSize=1 );
 
 uint64_t KSTimeNow();
+uint64_t KSTimeNowLocal();
 
 std::string KSDayTime( uint64_t kstime );
 
@@ -180,7 +188,7 @@ std::string standart_datetime(std::chrono::system_clock::time_point* tp = nullpt
 std::string shortdatetime(std::chrono::system_clock::time_point* tp = nullptr );
 
 std::string isodatetime( uint64_t kstime );
-std::string standart_datetime( uint64_t kstime );
+std::string standart_datetime( uint64_t kstime, bool milliseconds = false );
 
 std::string standart_date( int ksdate );
 

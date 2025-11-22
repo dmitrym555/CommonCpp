@@ -26,14 +26,14 @@ std::map<std::string, std::string> getClArgs( int argc, char* argv[] ) {
 }
 
 void KSConf::init(int argc, char *argv[], const char* confFile ) {
-    clargs = getClArgs( argc, argv );
+    m_clargs = getClArgs( argc, argv );
     if (confFile)
         m_conf.init(confFile);
 }
 
 std::string KSConf::get( const char* name, const char* defVal ) {
-    if ( clargs.count(name) != 0 )
-        return clargs[name];
+    if ( m_clargs.count(name) != 0 )
+        return m_clargs[name];
     return m_conf.get( name, defVal );
 }
 

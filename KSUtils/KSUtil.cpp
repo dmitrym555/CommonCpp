@@ -684,6 +684,15 @@ std::string join( const std::vector<std::string>& lines, const std::string& deli
     return res;
 }
 
+std::string KSReplaceAll( std::string str, std::vector<std::string>& fromList, std::vector<std::string>& toList ) {
+    for ( size_t i=0; i < std::min( fromList.size(), toList.size() ); ++i ) {
+        std::string& from = fromList[i];
+        std::string& to = toList[i];
+        replace_all( str, from, to );
+    }
+    return str;
+}
+
 std::string replace_all(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
     while((start_pos = str.find(from, start_pos)) != std::string::npos) {

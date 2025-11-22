@@ -305,11 +305,22 @@ uint64_t KSTimeNow() {
     return KSTime( std::chrono::system_clock::now() );
 }
 
-uint64_t KSTime( std::chrono::system_clock::time_point tp ) {
-    using namespace std::chrono;
-    uint64_t res = duration_cast<std::chrono::milliseconds>( tp.time_since_epoch() - tp2000().time_since_epoch() ).count();
+
+uint64_t KSTimeNowLocal() {
+
+    auto tp = std::chrono::system_clock::now();
+
+    const time_zone* tz = std::chrono::current_zone();
+    sys_info si = tz->get_info( tp );
+    int tzoffset = si.offset.count();
+    //->to_local( std::chrono::system_clock::now() );
+    uint64_t res = KSTime( tp );
+    res += tzoffset * 1000;
     return res;
 }
+
+
+
 
 time_t makeTime_t( const std::string& stime ) {
     struct std::tm tm;
@@ -382,14 +393,19 @@ std::string standart_datetime(std::chrono::system_clock::time_point* tp ) {
     std::time_t newt = std::chrono::system_clock::to_time_t(now);
     struct tm& t = *localtime(&newt);
 
+
     std::string res = strfmt( "%d-%02d-%02d %02d:%02d:%02d", t.tm_year +1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
     return res;
 }
 
-std::string standart_datetime( uint64_t kstime ) {
+std::string standart_datetime( uint64_t kstime, bool milliseconds ) {
     auto tp2000 = std::chrono::system_clock::from_time_t( time_t2000() );
     auto tp1 = tp2000 + std::chrono::milliseconds( kstime );
-    return standart_datetime( &tp1 );
+    std::string res = standart_datetime( &tp1 );
+    if ( milliseconds ) {
+        res += std::format( ".{}", kstime % 1000 );
+    }
+    return res;
 }
 
 std::string standart_date( int ksdate ) {

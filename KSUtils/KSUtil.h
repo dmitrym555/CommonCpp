@@ -231,6 +231,7 @@ std::string keyval( const std::string& src, const std::string& delimiter, std::s
 
 std::string join( const std::vector<std::string>& lines, const std::string& delimiter );
 std::string replace_all(std::string str, const std::string& from, const std::string& to);
+std::string KSReplaceAll( std::string str, std::vector<std::string>& fromList, std::vector<std::string>& toList );
 
 bool KSFileAppend( const std::string& fpath, const std::string& str );
 
