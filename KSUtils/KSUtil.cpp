@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <unordered_map>
+
 #include "../Platform/Platform.h"
 
 
@@ -108,13 +110,13 @@ bool GetFileInfo(const std::string& filename, KSFileInfo& finfo )
 
 int64_t GetFileSize(const std::string& filename)
 {
-#ifdef _WIN32
-    struct _stat64 stat_buf;
-    int rc = stat64(filename.c_str(), &stat_buf);
-#else
+//#ifdef _WIN32
+//    struct _stat64 stat_buf;
+//    int rc = stat64(filename.c_str(), &stat_buf);
+//#else
     struct stat stat_buf;
     int rc = stat(filename.c_str(), &stat_buf);
-#endif
+//#endif
     return rc == 0 ? stat_buf.st_size : -1;
 }
 
@@ -154,17 +156,34 @@ std::string& trim(std::string& s, const char* t)
     return ltrim(rtrim(s, t), t);
 }
 
-
 int KSStrToInt( const std::string& str ) {
+    return KSStrToIntPos( str, nullptr );
+}
+
+int KSStrToIntPos( const std::string& str, size_t* pos ) {
     int res = 0;
     if ( str.starts_with("0x") ) {
-        res = std::stoi( str.substr(2), nullptr, 16 );
+        res = std::stoi( str.substr(2), pos, 16 );
     }
     else {
-        res = str.length()? std::stoi( str ) : 0;
+        res = str.length()? std::stoi( str, pos, 10 ) : 0;
     }
     return res;
 }
+
+
+int64_t KSStrToInt64( const std::string_view& str, int defVal ) {
+    int64_t res = 0;
+    std::from_chars_result result;
+    if ( str.starts_with("0x") ) {
+        result = std::from_chars( str.substr(2).data(), str.data() + str.size(), res, 16 );
+    }
+    else {
+        result = std::from_chars( str.data(), str.data() + str.size(), res );
+    }
+    return ( result.ec == std::errc::invalid_argument )? defVal : res;
+}
+
 
 int KSStrToInt( const std::string_view& str, int defVal ) {
     int res = 0;
@@ -178,6 +197,12 @@ int KSStrToInt( const std::string_view& str, int defVal ) {
     return ( result.ec == std::errc::invalid_argument )? defVal : res;
 }
 
+bool KSAssignStr( std::string& dst, const std::string& src ) {
+    if ( !src.length() )
+        return false;
+    dst = src;
+    return true;
+}
 
 int KSStrToInt( const std::string& str, int defVal ) {
     int res = KSStrToInt(str);
@@ -318,6 +343,24 @@ size_t utf8_position(const std::string& utf8_string, size_t visible_chars) {
     }
 }
 
+int utf8_to_cp1251(const std::string& src, char* out, int bufsize ) {
+    static const std::wstring table = L"ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–— ™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬ ®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя";
+    static std::unordered_map<wchar_t,int> cpmap;
+    if ( !cpmap.size() ) {
+        for ( int i=0; i < (int)table.length(); ++i ) {
+            wchar_t code = table[i];
+            cpmap[ code ] = i;
+        }
+    }
+
+    std::wstring wsstr = utf8( src );
+    int i = 0;
+    for ( ; i < (int)wsstr.length() && i < bufsize; ++i ) {
+        wchar_t chr = wsstr[i];
+        out[i] = cpmap[chr] + 128;
+    }
+    return i;
+}
 
 int cp1251_to_utf8(char *out, const char *in, int buflen) {
     static const int table[128] = {
@@ -399,6 +442,14 @@ int KSSplit( const std::string_view& sss, const std::string& delimiter, KSSplitI
 }
 
 
+std::string keyonly( const std::string& str, const std::string& delimiter ) {
+    size_t pos = str.rfind( delimiter );
+    if ( pos != std::string::npos ) {
+        return str.substr( 0, pos );
+    }
+    return str;
+}
+
 std::string keyval( const std::string& str, const std::string& delimiter, std::string& val ) {
     size_t pos = str.rfind( delimiter );
     if ( pos != std::string::npos ) {
@@ -408,11 +459,43 @@ std::string keyval( const std::string& str, const std::string& delimiter, std::s
     return str;
 }
 
+int keyval( const std::string& str, const std::string& delimiter, int& outval ) {
+    std::string val;
+    std::string key = keyval( str, delimiter, val );
+    int res = KSStrToInt( key );
+    outval = KSStrToInt( val );
+    return res;
+}
+
+std::string KSStrRightDrop( const std::string& str, const std::string& delimiter, int index ) {
+    if ( index < 0 )
+        return "";
+    if ( index == 0 )
+        return str;
+    size_t pos = str.length();
+    std::string res;
+    for ( int iii=0; (iii < index) && (pos != std::string::npos); ++iii ) {
+        pos = str.rfind( delimiter, pos - 1 );
+    }
+    if ( pos == std::string::npos )
+        return "";
+    res = str.substr( 0, pos );
+    return res;
+}
 
 bool strMatchAny( const std::string& str, const std::vector<std::string>& someStrings ) {
     bool res = someStrings.end() != std::find( someStrings.begin(), someStrings.end(), str );
     return res;
 }
+
+bool strStartsAny( const std::string& astr, const std::vector<std::string>& someStrings ) {
+    for ( const std::string& str : someStrings ) {
+        if ( astr.starts_with( str ) )
+            return true;
+    }
+    return false;
+}
+
 
 void removeLastPathComponent( std::string& str, const std::string& delimiter ) {
     size_t pos = str.rfind( delimiter );
@@ -714,4 +797,25 @@ bool KSFileAppend( const std::string& fpath, const std::string& str ) {
 
     bool bres = ( wres == str.length() );
     return bres;
+}
+
+
+void CLpwdstring::decrypt() {
+    if ( length() > strVisibleSize( *this, 4 ) ) {
+        char buf[1024];
+        int chars = utf8_to_cp1251( *this, buf, sizeof( buf ) );
+        memcpy( data(), buf, chars );
+        resize( chars );
+    }
+    for ( size_t iii=0; iii < length(); ++iii ) {
+        data()[iii] = data()[iii] ^ 177;
+    }
+}
+
+void CLpwdstring::destroy() {
+    memset( this->data(), 0, this->length() );
+}
+
+CLpwdstring::~CLpwdstring() {
+    destroy();
 }

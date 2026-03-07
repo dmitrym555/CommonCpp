@@ -80,10 +80,15 @@ int64_t GetFileSize(const std::string& filename);
 
 int fastIntToStr(char* pbuf, int val);
 
+int64_t KSStrToInt64( const std::string_view& str, int defVal );
 int KSStrToInt( const std::string& str );
+int KSStrToIntPos( const std::string& str, size_t* pos );
 int KSStrToInt( const std::string& str, int defVal );
 int KSStrToInt( const std::string_view& str, int defVal );
 
+bool KSAssignStr( std::string& dst, const std::string& src );
+
+std::string& ltrim(std::string& s, const char* t);
 std::string& trim(std::string& s, const char* t = " \t\n\r\f\v\0");
 
 std::string strExpandTabs( const std::string& str, int tabSize=8 );
@@ -95,6 +100,8 @@ std::wstring fromBytes( const std::string& s );
 std::string utf8(const std::wstring& wstr);
 std::wstring utf8( const std::string& s );
 std::wstring utf8( const char* s );
+
+int utf8_to_cp1251(const std::string& src, char* out, int bufsize );
 int cp1251_to_utf8(char *out, const char *in, int buflen);
 void cp1251_to_utf8( const std::string& s, std::string& out );
 std::string cp1251_to_utf8( const std::string& s );
@@ -136,6 +143,8 @@ struct KSSplitItem {
 int KSSplit( const std::string_view& s, const std::string& delimiter, KSSplitItem* pdata, int maxDataSize );
 
 bool strMatchAny( const std::string& str, const std::vector<std::string>& strings );
+
+bool strStartsAny( const std::string& str, const std::vector<std::string>& someStrings );
 
 std::string removeOuterCharacters(const std::string& s, int count=1 );
 
@@ -207,7 +216,13 @@ class KSFileAuto {
     FILE* m_file = nullptr;
 public:
     KSFileAuto( FILE* fff ) { m_file = fff; }
-    ~KSFileAuto() { if (m_file) fclose( m_file ); }
+    void fileClose() {
+        if (m_file) {
+            fclose( m_file );
+            m_file = nullptr;
+        }
+    }
+    ~KSFileAuto() { fileClose(); }
 };
 
 class KSPipeAuto {
@@ -228,11 +243,26 @@ std::string strGetLeft( const std::string& str, const char* delimiter );
 std::string strGetRight( const std::string& str, const std::string& delimiter, bool returnSource = false );
 
 std::string keyval( const std::string& src, const std::string& delimiter, std::string& val );
+std::string keyonly( const std::string& str, const std::string& delimiter );
+int keyval( const std::string& str, const std::string& delimiter, int& val );
+
+std::string KSStrRightDrop( const std::string& str, const std::string& delimiter, int index );
 
 std::string join( const std::vector<std::string>& lines, const std::string& delimiter );
 std::string replace_all(std::string str, const std::string& from, const std::string& to);
 std::string KSReplaceAll( std::string str, std::vector<std::string>& fromList, std::vector<std::string>& toList );
 
 bool KSFileAppend( const std::string& fpath, const std::string& str );
+
+
+class CLpwdstring : public std::string
+{
+public:
+    ~CLpwdstring();
+
+    void decrypt();
+    void destroy();
+};
+
 
 #endif // KSUTIL_H

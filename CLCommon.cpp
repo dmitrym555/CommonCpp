@@ -6,11 +6,22 @@
 
 #include "KSEventLog/KSEventLog.h"
 
+#include <signal.h>
+
+
+void sig_handler(int s) {
+    Log().I("Caught signal %d",s);
+    clCommon.mainTerminate = true;
+}
+
 
 void CLInit() {
 
     clCommon.binPath = getBinPath();
     clCommon.binPath = KSExtractFilePath( clCommon.binPath );
+
+    signal (SIGINT,sig_handler);
+    signal (SIGTERM,sig_handler);
 
     Log().startFileLogging( clCommon.binPath );
 }

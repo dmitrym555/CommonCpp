@@ -21,6 +21,7 @@
 #include <mutex>
 
 #include "../KSUtils/KSUtil.h"
+#include "../KSUtils/KSUtil20.h"
 
 #include "../KSDateTime/KSDateTime.h"
 
@@ -38,10 +39,12 @@ class KSEventLogImpl : public KSEventLog {
     int m_lastMsgCount;
     int m_msgSuffixLen;
     int m_dbgLevel = 10;
+    bool m_disabled = false;
     std::string m_logDir;
     std::vector<std::string> m_excludes;
     std::string m_filter;
-    std::mutex m_mutex;
+    std::string m_logPath;
+    std::recursive_mutex m_mutex;
     FILE* m_logf = nullptr;
 
     void Msg( const std::string& m );
@@ -62,10 +65,14 @@ public:
     virtual void E( const std::string& fmt ) override;
     virtual void I( const std::string& fmt ) override;
 
+    virtual void L( int loglevel, uint32_t source, const std::string& fmt ) override;
+
     virtual void setLevel( int level) override;
     virtual int getLevel() override { return m_dbgLevel; };
     virtual void setExcludes( const std::string s) override;
     virtual void setFilter( const std::string s) override;
+
+    virtual void setDisabled( bool disable ) override { m_disabled = disable; }
 
     virtual void startFileLogging( const std::string& logDir ) override;
 
@@ -159,26 +166,29 @@ void KSEventLogImpl::E(const char* fmt, ... ) {
 void KSEventLogImpl::startFileLogging( const std::string& logDir ) {
     if ( logDir.length() == 0 )
         return;
+
     m_logDir = logDir;
 
     std::filesystem::create_directories( logDir );
 
+    removeOldFiles( m_logDir, 30 );
+
     std::string time = isodatetime( KSTimeNow() );
 
-    std::string logPath = std::format( "{}{}{}.log", logDir, CLpathDelimiter, time );
+    m_logPath = std::format( "{}{}{}.log", logDir, CLpathDelimiter, time );
 
-    m_logf = fopen( logPath.c_str(), "a" );
+    m_logf = fopen( m_logPath.c_str(), "a" );
     if ( m_logf == nullptr ) {
-        E( std::format( "{}::{} could not open file for logging {}", KSMETHOD, logPath ) );
+        E( std::format( "{}::{} could not open file for logging {}", KSMETHOD, m_logPath ) );
     }
     else {
-        I( std::format( "{}::{} logPath {}", KSMETHOD, logPath ) );
+        I( std::format( "{}::{} logPath {}", KSMETHOD, m_logPath ) );
     }
 }
 
 
 void KSEventLogImpl::logWrite(const std::string& m ) {
-
+static int wrCounter = 0;
     if ( m_logf == nullptr ) {
         return;
     }
@@ -186,10 +196,18 @@ void KSEventLogImpl::logWrite(const std::string& m ) {
     fwrite( m.c_str(), 1, m.length(), m_logf );
     if ( m.length() > 1 )
         fflush(m_logf);
+
+    if ( ++wrCounter > 1000 ) {
+        wrCounter = 0;
+        if ( GetFileSize( m_logPath ) > 1024*1024*100 ) {
+            fclose( m_logf );
+            startFileLogging( m_logDir );
+        }
+    }
 }
 
 void KSEventLogImpl::Msg( const std::string& m ) {
-    std::lock_guard<std::mutex> lg(m_mutex);
+    std::lock_guard<std::recursive_mutex> lg(m_mutex);
     if (m_filter.length() && m.find(m_filter) == std::string::npos )
         return;
     if ( m_excludes.size() ) {
@@ -203,8 +221,10 @@ void KSEventLogImpl::Msg( const std::string& m ) {
         int backs = (++m_lastMsgCount == 2)? 0: m_msgSuffixLen;
         std::string msgSuffix = " (" + std::to_string(m_lastMsgCount) + ")";
         m_msgSuffixLen = msgSuffix.length();
-        std::cout << std::string(backs, '\b');
-        std::cout << msgSuffix << std::flush;
+        if ( !m_disabled ) {
+            std::cout << std::string(backs, '\b');
+            std::cout << msgSuffix << std::flush;
+        }
         logWrite( "." );
     }
     else {
@@ -216,7 +236,9 @@ void KSEventLogImpl::Msg( const std::string& m ) {
         if ( p == std::string::npos )
             p = 0;
         str.insert(p+2, shortdatetime() + " " );
-        std::cout << str << std::flush;
+        if ( !m_disabled ) {
+            std::cout << str << std::flush;
+        }
         logWrite( str );
     }
 }
@@ -247,6 +269,25 @@ void KSEventLogImpl::I( const std::string& m ) {
     Msg( "\nI : \033[32m" +  m  + "\033[0m" );
 }
 
+void KSEventLogImpl::L( int level, uint32_t source, const std::string& fmt ) {
+    if ( m_dbgLevel < level )
+        return;
+    level += 2;
+    if ( level < 0 || level > 11 )
+        return;
+    const std::string prefix1[] = { "\nE : ", "\nW : ", "\nI : ", "\nD1: ", "\nD2: ", "\nD3: ", "\nD4: ", "\nD5: ", "\nD6: ", "\nD7: ", "\nD8: ", "\nD9: " };
+    const std::string prefix2[] = { "\033[37;41m", "\033[33m", "\033[32m", "", "", "", "", "", "", "", "", "" };
+    const std::string postfix[] = { "\033[0m", "\033[0m", "\033[0m", "", "", "", "", "", "", "", "", "" };
+    std::string src;
+    while ( source ) {
+        if ( src.length() ) src += '.';
+        src += std::to_string( source & 0xff );
+        source >>= 8;
+    }
+    std::string mmm = std::format("{}#{} {}{}{}", prefix1[level], src, prefix2[level], fmt, postfix[level] );
+    Msg( mmm );
+
+}
 
 
 

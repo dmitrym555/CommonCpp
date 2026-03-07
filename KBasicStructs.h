@@ -6,12 +6,13 @@
 #include <list>
 #include <vector>
 
-#include <sys/socket.h>
+//#include <sys/socket.h>
 
 #include <mutex>
 
 #include "KSuperBasic.h"
 
+#include "Platform/Platform.h"
 
 #ifndef TKSRtpParamId
 typedef uint32_t TKSRtpParamId;
@@ -140,11 +141,6 @@ struct KSRtpBlobHeader {
     uint8_t       type;             //  9
     uint8_t       compressed = 0;   // 10
     uint8_t       reserved[16-10];  // 16
-};
-
-struct KSDasapiId {
-    int dasapiid;
-    struct sockaddr cl_addr;
 };
 
 

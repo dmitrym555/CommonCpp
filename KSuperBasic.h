@@ -53,14 +53,5 @@ struct KSGUID {
 };
 #pragma pack(pop)
 
-class CLpwdstring : public std::string
-{
-public:
-    ~CLpwdstring();
-
-    void decrypt();
-    void destroy();
-};
-
 
 #endif

@@ -3,7 +3,7 @@
 //
 
 #ifndef STRFMTH
-#define STRFTMH
+#define STRFMTH
 
 #include <string>
 
@@ -12,3 +12,4 @@ std::string strfmt(const char* fmt, ... );
 
 
 #endif
+

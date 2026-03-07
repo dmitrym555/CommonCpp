@@ -180,6 +180,7 @@ uint64_t KSTimeFromDate( const std::string& sdate, int delimiterSize=1 );
 
 uint64_t KSTimeNow();
 uint64_t KSTimeNowLocal();
+uint64_t KSTimeToLocal(uint64_t& kstime );
 
 std::string KSDayTime( uint64_t kstime );
 
@@ -189,6 +190,9 @@ std::string shortdatetime(std::chrono::system_clock::time_point* tp = nullptr );
 
 std::string isodatetime( uint64_t kstime );
 std::string standart_datetime( uint64_t kstime, bool milliseconds = false );
+
+std::string standart_datetime_utc( uint64_t kstime, bool milliseconds = false );
+
 
 std::string standart_date( int ksdate );
 

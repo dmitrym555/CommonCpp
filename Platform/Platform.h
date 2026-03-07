@@ -9,7 +9,10 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
+#else
+#include <sys/socket.h>
 #endif
+
 
 #ifndef byte
 typedef unsigned char byte;
@@ -41,6 +44,13 @@ int CLFdWait( int fd, int timeout );
 std::string execShellCmd( const std::string& cmd, int timeout );
 
 std::string sockaddr_to_string(const struct sockaddr* sa, bool port = false );
+
+int connect_with_timeout(int sockfd, const struct sockaddr* addr, socklen_t addrlen, unsigned int timeout_ms);
+
+struct KSDasapiId {
+    int dasapiid;
+    struct sockaddr cl_addr;
+};
 
 
 class CLProcStat {

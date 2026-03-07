@@ -31,17 +31,3 @@ std::string KSGUID::toStr() {
     return res;
 }
 
-
-void CLpwdstring::decrypt() {
-    for ( size_t iii=0; iii < length(); ++iii ) {
-        data()[iii] = data()[iii] ^ 177;
-    }
-}
-
-void CLpwdstring::destroy() {
-    memset( this->data(), 0, this->length() );
-}
-
-CLpwdstring::~CLpwdstring() {
-    destroy();
-}

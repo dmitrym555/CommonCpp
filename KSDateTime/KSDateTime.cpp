@@ -118,7 +118,7 @@ public:
     virtual byte second() override;
     virtual word millis() override;
 
-    virtual void setDateTime( word y, byte m, byte d, byte h=0, byte mm=0, byte s=0, word ms=0 );
+    virtual void setDateTime( word y, byte m, byte d, byte h=0, byte mm=0, byte s=0, word ms=0 ) override;
 };
 
 PKSDateTimeImpl::PKSDateTimeImpl() {
@@ -319,7 +319,29 @@ uint64_t KSTimeNowLocal() {
     return res;
 }
 
+uint64_t KSTimeToLocal(uint64_t& kstime ) {
+/*
+    auto now = std::chrono::system_clock::now();
+    auto local_time = std::chrono::current_zone()->to_local(now);
+    auto info = std::chrono::current_zone()->get_info(now);
+    std::chrono::seconds offset_seconds = info.offset;
+    int tzoffset = offset_seconds.count();
+*/
+    static int tzoffset = -1;
 
+    if ( tzoffset == -1 ) {
+        time_t rawtime;
+        time(&rawtime);
+        struct tm utctime_tm = *gmtime(&rawtime);
+        struct tm localtime_tm = *localtime(&rawtime);
+        mktime(&utctime_tm);
+        mktime(&localtime_tm);
+        double offset_seconds = difftime(mktime(&localtime_tm), mktime(&utctime_tm));
+        tzoffset = 1000*(int)offset_seconds;
+    }
+    kstime += tzoffset;
+    return kstime;
+}
 
 
 time_t makeTime_t( const std::string& stime ) {
@@ -383,7 +405,7 @@ std::string shortdatetime(std::chrono::system_clock::time_point* tp ) {
     std::time_t newt = std::chrono::system_clock::to_time_t(now);
     struct tm& t = *localtime(&newt);
 
-    std::string res = strfmt( "%02d %02d:%02d:%02d", t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
+    std::string res = strfmt( "%02d.%02d %02d:%02d:%02d", t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
     return res;
 }
 
@@ -393,7 +415,6 @@ std::string standart_datetime(std::chrono::system_clock::time_point* tp ) {
     std::time_t newt = std::chrono::system_clock::to_time_t(now);
     struct tm& t = *localtime(&newt);
 
-
     std::string res = strfmt( "%d-%02d-%02d %02d:%02d:%02d", t.tm_year +1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
     return res;
 }
@@ -402,6 +423,20 @@ std::string standart_datetime( uint64_t kstime, bool milliseconds ) {
     auto tp2000 = std::chrono::system_clock::from_time_t( time_t2000() );
     auto tp1 = tp2000 + std::chrono::milliseconds( kstime );
     std::string res = standart_datetime( &tp1 );
+    if ( milliseconds ) {
+        res += std::format( ".{}", kstime % 1000 );
+    }
+    return res;
+}
+
+std::string standart_datetime_utc( uint64_t kstime, bool milliseconds ) {
+    auto tp2000 = std::chrono::system_clock::from_time_t( time_t2000() );
+    auto tp1 = tp2000 + std::chrono::milliseconds( kstime );
+
+    std::time_t newt = std::chrono::system_clock::to_time_t(tp1);
+    struct tm& t = *gmtime(&newt);
+
+    std::string res = strfmt( "%d-%02d-%02d %02d:%02d:%02d", t.tm_year +1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
     if ( milliseconds ) {
         res += std::format( ".{}", kstime % 1000 );
     }

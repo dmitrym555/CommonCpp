@@ -5,9 +5,9 @@
 
 #include <cmath>
 
-#include "../../CommonCpp/KSEventLog/KSEventLog.h"
+#include "../CommonCpp/KSEventLog/KSEventLog.h"
 
-
+#include <format>
 
 bool KLParamH::isgood() {
     bool res = Quality == KLPARAM_QUALITY_GOOD;
@@ -35,6 +35,12 @@ int KSPARAMWITHDESCR::getZoneStatus() {
         }
     }
     return 0;
+}
+
+
+std::string KSPARAMWITHDESCR::getSampleDisplayString() {
+    std::string res = std::format( "{} {}", standart_datetime(timestamp), param.displayString() );
+    return res;
 }
 
 

@@ -8,6 +8,10 @@
 
 class KSMain {
 public:
+    KSMain() {
+        Log().I("Main start");
+    }
+
     ~KSMain() {
         Log().I("Main exit\n");
     }

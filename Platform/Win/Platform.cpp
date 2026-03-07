@@ -127,5 +127,10 @@ CLProcStat& procStat() {
 }
 
 
+int connect_with_timeout(int sockfd, const struct sockaddr* addr, socklen_t addrlen, unsigned int timeout_ms)
+{
+	::connect(sockfd, addr, addrlen);
+	return 0;
+}
 
 

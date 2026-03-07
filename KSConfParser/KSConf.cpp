@@ -15,7 +15,7 @@ std::map<std::string, std::string> getClArgs( int argc, char* argv[] ) {
         std::string line = argv[i];
         size_t pos = line.find('=');
         if ( pos == std::string::npos ) {
-            Log().W( strfmt( "Unknown arg: %s", argv[i] ) );
+            //Log().W( strfmt( "Unknown arg: %s", argv[i] ) );
             continue;
         }
         std::string argname = line.substr(0, pos);

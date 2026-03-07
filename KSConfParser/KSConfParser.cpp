@@ -89,7 +89,7 @@ void KSConfParserImpl::save() {
     }
     for (auto const & [k, v] : m_conf) {
         std::string line = strfmt( "%s=%s\n", k.c_str(), v.c_str() );
-        fprintf( f, line.c_str() );
+        fprintf( f, "%s", line.c_str() );
     }
     fclose( f );
 }

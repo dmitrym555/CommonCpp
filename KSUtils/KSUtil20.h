@@ -77,5 +77,8 @@ template<class T1, class T2> T2 getXmlChildElValue( const T1* xmlel, const char*
     return res;
 }
 
+int removeOldFiles(const std::string& directoryPath, int daysOld);
+
+std::string KSLoadFromFileToString(const std::string& filename);
 
 #endif // KSUTIL_H

@@ -62,10 +62,28 @@ struct KLPARAM : public KLParamH
     } Value;
 
     bool operator == (const KLPARAM& other ) const {
-        //return this->Value.Integer == rhs.Value.Integer;
         return ( 0 == memcmp( this, &other, sizeof(*this) ) );
     }
+};
 
+struct CCLPARAM : public KLParamH
+{
+    union {
+        double     dval;
+        byte       Boolean;
+        int64_t    Integer;
+        uint64_t   DateTime;
+        size_t     strLen;
+    } Value;
+
+    bool operator == (const CCLPARAM& other ) const {
+        return ( 0 == memcmp( this, &other, sizeof(*this) ) );
+    }
+};
+
+struct CCLPARAMTS: public CCLPARAM
+{
+    uint64_t     timestamp;
 };
 
 struct KSPARAM : public KLParamH
@@ -98,8 +116,12 @@ struct KSPARAM : public KLParamH
 
     KSPARAM() = default;
 
-    bool operator == (const KSPARAM& other ) const {
+    bool sameAs( const KSPARAM& other ) const {
         return ( 0 == memcmp( this, &other, sizeof(*this) ) );
+    }
+
+    bool operator == (const KSPARAM& other ) const {
+        return sameAs( other );
     }
 
     std::string getString();
@@ -142,19 +164,30 @@ struct KLParamDescriptor {
     std::string     shortName;
     std::string     description;
     std::string     Name;
+    std::string     displayName;
+    std::string     userComment;
+    std::string     treeAddres;
+    std::string     measure;
     KLParamFields   paramFields;
 };
 
 
 struct KSPARAMWITHDESCR {
     KLParamDescriptor id;
-    uint64_t          timestamp;
+    uint64_t          timestamp = 0;
     uint8_t           wasInitialized :1;
     uint8_t           fromArchive :1;
 
     KSPARAM           param;
 
     int getZoneStatus();
+
+    std::string getSampleDisplayString();
+
+    bool sameAs( const KSPARAMWITHDESCR& src ) {
+        bool res = (timestamp != src.timestamp) || !(param == src.param);
+        return res;
+    }
 
     KSPARAMWITHDESCR() {
         wasInitialized = 0;
