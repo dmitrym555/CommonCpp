@@ -25,9 +25,11 @@ extern void redrawSurface();
 
 
 
-KSTInterval KSRequestSamplesLoop::getTimeInterval() {
+KSTInterval KSRequestSamplesLoop::getTimeInterval(bool local) {
     std::lock_guard<std::mutex> lg(m_mutex);
     KSTInterval res = ti_requested;
+    //if ( local )
+    //    KSTimeToLocal( res.tstart );
     return res;
 }
 
@@ -81,6 +83,20 @@ void KSRequestSamplesLoop::runTrend( uint32_t dbParamId ) {
     --m_trendsThreadCounter;
 }
 
+void KSRequestSamplesLoop::setConfig(const std::string& dbAlias) {
+    std::string dbGuid, port;
+    std::string addr = keyval( dbAlias, "#", dbGuid );
+    std::string ipaddr = keyval( addr, ":", port );
+
+    m_reqComm.ipaddr = ipaddr;
+    m_reqComm.dbGuid = dbGuid;
+    m_reqComm.seconsPerSample = 0;
+    m_reqComm.use64bit = false; //g_conf.get( "use64bit", "0" ) == "1";
+    m_reqComm.useUtc = true;
+    m_reqComm.ipport = KSStrToInt(port, 0x6543 );
+
+}
+
 void KSRequestSamplesLoop::reloadConfig() {
     std::string confPath = strfmt( "%s%scfg.conf", m_binPath.c_str(), psep() );
     g_conf.init(0, nullptr, confPath.c_str() );
@@ -91,6 +107,8 @@ void KSRequestSamplesLoop::reloadConfig() {
     m_reqComm.dbGuid = g_conf.get( "dbGuid", "" );
     m_reqComm.seconsPerSample = (g_conf.get( "useDensity", "1" ) == "1")? ti_requested.tduration / 1000 / 50000 : 0;
     m_reqComm.use64bit = g_conf.get( "use64bit", "0" ) == "1";
+    m_reqComm.useUtc = true;
+    //m_reqComm.ipport = 6543;
 
     Log().D1( strfmt("rtpReq.m_reqcb.seconsPerSample %d", m_reqComm.seconsPerSample ) );
 
@@ -100,8 +118,9 @@ void KSRequestSamplesLoop::reloadConfig() {
 void KSRequestSamplesLoop::run() {
 
     KSsleep(200);
-    ti_requested.tduration = 1*60*60*1000;
-    ti_requested.tstart = KSTimeNow() - ti_requested.tduration;
+    ti_requested.tduration = 6*60*60*1000;
+    //uint64_t tnowutc = KSTimeNow();
+    ti_requested.tstart = KSTimeNowLocal() - ti_requested.tduration;
 
     while ( !m_terminated ) {
 

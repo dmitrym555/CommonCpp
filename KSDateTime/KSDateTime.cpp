@@ -11,6 +11,8 @@
 
 #include "../strfmt.h"
 
+#include <math.h>
+
 bool IsDayLight()
 {
 //  TTimeZoneInformation TimeZoneInformation;
@@ -319,14 +321,7 @@ uint64_t KSTimeNowLocal() {
     return res;
 }
 
-uint64_t KSTimeToLocal(uint64_t& kstime ) {
-/*
-    auto now = std::chrono::system_clock::now();
-    auto local_time = std::chrono::current_zone()->to_local(now);
-    auto info = std::chrono::current_zone()->get_info(now);
-    std::chrono::seconds offset_seconds = info.offset;
-    int tzoffset = offset_seconds.count();
-*/
+int KSTimezoneOffset() {
     static int tzoffset = -1;
 
     if ( tzoffset == -1 ) {
@@ -339,7 +334,23 @@ uint64_t KSTimeToLocal(uint64_t& kstime ) {
         double offset_seconds = difftime(mktime(&localtime_tm), mktime(&utctime_tm));
         tzoffset = 1000*(int)offset_seconds;
     }
-    kstime += tzoffset;
+    return tzoffset;
+}
+
+uint64_t KSTimeToUtc(uint64_t& kstime ) {
+    kstime -= KSTimezoneOffset();
+    return kstime;
+}
+
+uint64_t KSTimeToLocal(uint64_t& kstime ) {
+/*
+    auto now = std::chrono::system_clock::now();
+    auto local_time = std::chrono::current_zone()->to_local(now);
+    auto info = std::chrono::current_zone()->get_info(now);
+    std::chrono::seconds offset_seconds = info.offset;
+    int tzoffset = offset_seconds.count();
+*/
+    kstime += KSTimezoneOffset();
     return kstime;
 }
 
@@ -547,4 +558,15 @@ uint64_t CP56TIME2A::toKSTime() {
 
     uint64_t tm2000 = KSTime( std::chrono::system_clock::from_time_t( t ) ) + msec%1000;
     return tm2000;
+}
+
+uint64_t KSDelphiTime2ksTime( double tdtime ) {
+    uint64_t res = (tdtime - 36526) * msin24h;
+    return res;
+}
+
+double KSTime2DelphiTime( uint64_t kstime ) {
+
+    double res = 36526 + kstime / msin24h + ( ((double)(kstime % msin24h)) / msin24h );
+    return res;
 }

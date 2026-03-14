@@ -6,6 +6,10 @@
 #define _GNU_SOURCE
 #endif
 
+
+#include <fcntl.h>
+#include <poll.h>
+
 #include <sys/types.h>
 
 #include <unistd.h>

@@ -9,6 +9,8 @@
 
 #include "KSDateTime/KSDateTime.h"
 
+
+
 enum TEventType {etSimple = 0, etAlarmPMA, etAlarmPMI, etAlarmAMA, etAlarmAMI, etAlarmNormal, etAlarmFalse, etAlarmTrue,
                  etAlarmSwitch, etAlarmTxt, etAlarmRange, etAlarmLess, etAlarmMore, etAlarmError, etKLTU, etDispTU};
 

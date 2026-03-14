@@ -25,7 +25,7 @@ int KSRtpRequest::startRequest(int dbParamId) {
     m_reqcb.eob = 0;
     if ( !m_tcpconn->isConnected() ) {
         m_tcpconn->init( m_reqcb.comm.ipaddr, m_reqcb.comm.ipport );
-        if ( 0 > m_tcpconn->connect( KSUDPTCP::udp ) ) {
+        if ( 0 > m_tcpconn->connect( 5000, KSUDPTCP::udp ) ) {
             Log().E("socket connect error");
             return -1;
         }
@@ -35,6 +35,9 @@ int KSRtpRequest::startRequest(int dbParamId) {
     KSApiStringHeader reqsH;
 
     std::string json;
+
+    if ( !m_reqcb.comm.useUtc )
+        KSTimeToUtc( m_reqcb.timeStart );
 
     if ( m_reqcb.cmd == (int)KSApiRequestCmd::start ) {
         json = strfmt( R"(
@@ -234,7 +237,9 @@ void KSRtpRequest::run(const bool& cancel ) {
                 dbPar.setValue( sample32 );
                 dbPar.t2000Msec = (uint64_t)blockBaseDay * TKSMsecPerDay + sample32.timeMsec;
             }
-            KSTimeToLocal( dbPar.t2000Msec );
+            dbPar.t2000Msec;
+            if ( !m_reqcb.comm.useUtc )
+                KSTimeToLocal( dbPar.t2000Msec );
             samplesBuf.addSample(dbPar);
         }
 

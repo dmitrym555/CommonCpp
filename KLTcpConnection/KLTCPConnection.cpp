@@ -31,6 +31,8 @@
 
 #include <unistd.h>
 
+#define LOGSRC 0
+
 
 class KLTCPConnectionLinuxImpl : public KLTCPConnection
 {
@@ -47,15 +49,23 @@ class KLTCPConnectionLinuxImpl : public KLTCPConnection
 
 public:
     void init(const std::string& ipaddr, word port);
-    virtual int connect(KSUDPTCP type, int timeout=5000) override ;
+    virtual int connect(int timeout, KSUDPTCP type) override;
+    virtual int connectWithSocket(int socket) override;
     virtual void disconnect() override;
     virtual int send(byte* buf, int reqlen, bool dontcallback=false) override;
-    virtual int processIncoming() override;
-    virtual int receiveSync(byte* buf, int sz, int timeout ) override;
-    virtual int checkInpData() override;
-    virtual void resetRecieve() override;
+    virtual int processIncoming(int paramStart) override;
 
-    virtual bool isConnected() override { return m_connected; };
+    virtual int checkInpData() override;
+
+    virtual bool isConnected(int* psock=nullptr) override {
+        if ( psock )
+            *psock = m_sock;
+        return m_connected;
+    };
+
+    virtual int waitForIncomingData(int timeout=3000) override;
+    virtual void resetRecieve() override;
+    virtual int receiveSync(byte* buf, int sz, int timeout ) override;
 
     KLTCPConnectionLinuxImpl();
     ~KLTCPConnectionLinuxImpl();
@@ -82,7 +92,29 @@ void KLTCPConnectionLinuxImpl::init(const std::string& ipaddr, word port) {
     m_ipport = port;
 }
 
-int KLTCPConnectionLinuxImpl::connect(KSUDPTCP type, int timeout) {
+int KLTCPConnectionLinuxImpl::waitForIncomingData(int timeout) {
+/*
+    fd_set readset;
+    FD_ZERO(&readset);
+    FD_SET(m_sock, &readset);
+    timeval time_wait;
+    time_wait.tv_sec = timeout/1000;
+    time_wait.tv_usec = (timeout%1000)*1000;
+    int res = select(m_sock+1, &readset, NULL, NULL, &time_wait);
+
+    if ( res == 1 ) { // check the data is there
+        byte recvBuf[1];
+        res = recv(m_sock, recvBuf, sizeof(recvBuf), MSG_DONTWAIT|MSG_PEEK|MSG_NOSIGNAL);
+        if ( res <= 0 ) {
+            res = -1;
+        }
+    }
+    return res;
+*/
+    return 0;
+}
+
+int KLTCPConnectionLinuxImpl::connect(int timeout, KSUDPTCP type) {
     if ( m_connected )
         return 0;
     struct sockaddr_in addr;
@@ -189,7 +221,17 @@ int KLTCPConnectionLinuxImpl::receiveSync(byte* buf, int sz, int timeoutperbyte 
     return sz;
 }
 
-int KLTCPConnectionLinuxImpl::processIncoming() {
+
+int KLTCPConnectionLinuxImpl::connectWithSocket(int socket) {
+    disconnect();
+    m_sock = socket;
+    m_connected = true;
+    Log().L( DL1, LOGSRC, std::format( "{}::{} finished. Socket {}", KSMETHOD, socket ) );
+    return 1;
+}
+
+
+int KLTCPConnectionLinuxImpl::processIncoming(int startParam) {
     byte stackbuf[65536];
 //    byte* dynbuf = nullptr;
     byte* pbuf = stackbuf;
@@ -219,6 +261,46 @@ int KLTCPConnectionLinuxImpl::processIncoming() {
     return res;
 }
 
+/*
+int KLTCPConnectionLinuxImpl::processIncoming( int startParam ) {
+    const int recBufSize = 4096*16;
+    byte recbuf[recBufSize];
+
+    struct pollfd pfd;
+    pfd.fd = m_sock;
+    pfd.events = POLLIN;
+    int waitres = poll( &pfd, 1, 1000 );
+    int recvres = 0;
+
+    if ( waitres < 0 ) {
+        disconnect();
+        return -1;
+    }
+
+    if ( waitres == 0 )
+        return 0;
+
+    recvres = recv(m_sock, recbuf, recBufSize, MSG_DONTWAIT | MSG_NOSIGNAL);
+
+    if ( recvres <= 0 ) {
+        int error_code;
+        int error_code_size = sizeof( error_code );
+        getsockopt(m_sock, SOL_SOCKET, SO_ERROR, &error_code, (socklen_t*)&error_code_size);
+
+        Log().L( DLW, LOGSRC, std::format("{}::{} socket reading error {} on {}:{} socket {} {}", KSMETHOD, error_code, m_ipaddr, m_ipport, m_sock, m_targetId ) );
+        disconnect();
+        return -1;
+    }
+
+    if ( m_connected ) {
+        if ( m_proto )
+            ((KSTargetProto*)m_proto)->processIncoming( recbuf, recvres, startParam );
+    }
+    return recvres;
+}
+*/
+
+
 int KLTCPConnectionLinuxImpl::send(byte* buf, int reqlen, bool dontcallback ) {
 
     int res = ::send(m_sock, (char*)buf, reqlen, 0); // MSG_NOSIGNAL
@@ -232,7 +314,7 @@ int KLTCPConnectionLinuxImpl::send(byte* buf, int reqlen, bool dontcallback ) {
         return -1;
     }
     if ( !dontcallback )
-        res = processIncoming();
+        res = processIncoming(0);
     return res;
 }
 

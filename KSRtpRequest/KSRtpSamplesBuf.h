@@ -60,6 +60,7 @@ public:
 
     KSRtpSamplesVector& getVector(int day);
 
+
     KSRtpSamplesBuf() { resetMinMax(); }
 };
 

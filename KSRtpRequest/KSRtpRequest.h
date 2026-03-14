@@ -16,6 +16,7 @@ struct KSRtpRequestCBComm {
     word ipport = 0x6543;
     int     seconsPerSample = 0;
     bool    use64bit = false;
+    bool    useUtc = true;
 };
 
 struct KSRtpRequestCB : public KSRtpReadSamplesReqStruct {

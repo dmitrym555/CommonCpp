@@ -47,6 +47,9 @@ typedef unsigned char BYTE;
 typedef unsigned short WORD;
 #endif
 
+
+const uint32_t msin24h = 24*3600000;
+
 #pragma pack(push, 1)
 // CP56Time2a timestamp
 
@@ -178,9 +181,11 @@ time_t makeTime_t( const std::string& stime );
 uint64_t KSTime( const std::string& stime );
 uint64_t KSTimeFromDate( const std::string& sdate, int delimiterSize=1 );
 
+int KSTimezoneOffset();
 uint64_t KSTimeNow();
 uint64_t KSTimeNowLocal();
 uint64_t KSTimeToLocal(uint64_t& kstime );
+uint64_t KSTimeToUtc(uint64_t& kstime );
 
 std::string KSDayTime( uint64_t kstime );
 
@@ -204,5 +209,7 @@ struct KSTInterval {
     void reset() { tstart = tduration = 0; }
 };
 
+double KSTime2DelphiTime( uint64_t kstime );
+uint64_t KSDelphiTime2ksTime( double tdtime );
 
 #endif // KSDATETIME_H

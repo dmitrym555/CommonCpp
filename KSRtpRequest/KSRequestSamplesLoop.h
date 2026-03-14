@@ -43,12 +43,15 @@ public:
     void runTrend( uint32_t dbParamId );
 
     void reloadConfig();
+    void setConfig(const std::string& dbAlias);
 
     void start();
     void stop();
     void change( const KSTInterval& tinterval );
     void wake();
-    KSTInterval getTimeInterval();
+    KSTInterval getTimeInterval(bool local = true);
+
+    KSRtpRequestCBComm& reqCB() { return m_reqComm; }
 
     void resetIds() { m_paramIds.clear(); }
 
