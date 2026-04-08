@@ -135,7 +135,7 @@ int KSRtpSamplesBuf::calcDensity() {
 //
 // KSTrendsBuf
 //
-uint32_t KSTrendsBuf::getParIdByIndex(int index)
+std::string KSTrendsBuf::getParIdByIndex(int index)
 {
     std::lock_guard<std::mutex> lg( m_mutex );
     return m_ids[index];
@@ -148,7 +148,7 @@ int KSTrendsBuf::getTrendsCount()
     return res;
 }
 
-KSRtpSamplesBuf& KSTrendsBuf::get( uint32_t dbParamId )
+KSRtpSamplesBuf& KSTrendsBuf::get( const std::string& dbParamId )
 {
     std::lock_guard<std::mutex> lg( m_mutex );
     return m_pool[ dbParamId ];
@@ -177,8 +177,8 @@ void KSTrendsBuf::setMinTimeSpan(int timespan) {
 
 void KSTrendsBuf::toggleTrend(int idx) {
     std::lock_guard<std::mutex> lg( m_mutex );
-    uint32_t dbPramId = m_ids[idx];
-    if ( dbPramId ) {
+    std::string dbPramId = m_ids[idx];
+    if ( dbPramId.length() ) {
         m_pool[ dbPramId ].m_enabled = !m_pool[ dbPramId ].m_enabled;
     }
 }
@@ -191,7 +191,7 @@ void KSTrendsBuf::resetData() {
     }
 }
 
-void KSTrendsBuf::setTrend( int idx, uint32_t dbParamId, uint32_t color ) {
+void KSTrendsBuf::setTrend( int idx, const std::string& dbParamId, uint32_t color ) {
     std::lock_guard<std::mutex> lg( m_mutex );
     if ( idx < 0 || idx > (int)m_ids.size() )
         return;
@@ -205,7 +205,7 @@ void KSTrendsBuf::clearTrends() {
     std::lock_guard<std::mutex> lg( m_mutex );
     m_ids.resize( 50 );
     for ( size_t i=0; i < m_ids.size(); ++i ) {
-        m_ids[i] = 0;
+        m_ids[i] = "";
     }
     m_pool.clear();
 }

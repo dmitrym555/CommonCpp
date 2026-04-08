@@ -14,7 +14,7 @@ class CLTCPConnection: public CLTargetConnection
 public:
     static CLTCPConnection* create(int impl);
 
-    virtual void init(const std::string& ipaddr, short port)=0;
+    virtual void init(const std::string& ipaddr, uint16_t port)=0;
 
     virtual int connect(int timeout=5000)=0;
     virtual int connectWithSocket(int socket)=0;

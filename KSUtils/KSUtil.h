@@ -132,6 +132,7 @@ std::vector<std::basic_string<T>> split(const std::basic_string<T>& s, const std
     return res;
 }
 
+void strToLower( std::string& str );
 
 
 
@@ -245,6 +246,7 @@ std::string strGetRight( const std::string& str, const std::string& delimiter, b
 std::string keyval( const std::string& src, const std::string& delimiter, std::string& val );
 std::string keyonly( const std::string& str, const std::string& delimiter );
 int keyval( const std::string& str, const std::string& delimiter, int& val );
+std::string keyval( const std::string& str, const std::string& delimiter, uint32_t& val );
 
 std::string KSStrRightDrop( const std::string& str, const std::string& delimiter, int index );
 
@@ -264,5 +266,6 @@ public:
     void destroy();
 };
 
+bool isGuid( const std::string& guid );
 
 #endif // KSUTIL_H

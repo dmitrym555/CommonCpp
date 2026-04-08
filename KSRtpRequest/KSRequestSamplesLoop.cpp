@@ -42,8 +42,10 @@ void KSRequestSamplesLoop::change( const KSTInterval& tinterval ) {
     wake();
 }
 
-void KSRequestSamplesLoop::runTrend( uint32_t dbParamId ) {
+void KSRequestSamplesLoop::runTrend( const std::string& argdbParamId ) {
 
+    uint32_t dbParamId;
+    std::string dbGuid = keyval( argdbParamId, "#", dbParamId );
     // do random sleep to reduce network racing condition probability
     int randomSleep = 5 * (dbParamId % 10);
     Log().D1( strfmt( "random sleep: %d", randomSleep ) );
@@ -54,12 +56,13 @@ void KSRequestSamplesLoop::runTrend( uint32_t dbParamId ) {
 
     rtpReq.m_reqcb.dbParamId = dbParamId;
     rtpReq.m_reqcb.comm = m_reqComm;
+    rtpReq.m_reqcb.comm.dbGuid = dbGuid;
 
     m_mutex.lock();
     KSTInterval requested = ti_requested;
     m_mutex.unlock();
 
-    KSRtpSamplesBuf& samplesBuf = trendsBuf.get( dbParamId );
+    KSRtpSamplesBuf& samplesBuf = trendsBuf.get( argdbParamId );
 
     if ( samplesBuf.ti_filled.tstart == 0 ) {
         samplesBuf.ti_filled = requested;
@@ -104,11 +107,14 @@ void KSRequestSamplesLoop::reloadConfig() {
     Log().setLevel( std::stoi( g_conf.get("logLevel", "5" ) ) );
 
     m_reqComm.ipaddr = g_conf.get( "ipaddr", "127.0.0.1" );
+    std::string port;
+    m_reqComm.ipaddr = keyval( m_reqComm.ipaddr, ":", port );
     m_reqComm.dbGuid = g_conf.get( "dbGuid", "" );
     m_reqComm.seconsPerSample = (g_conf.get( "useDensity", "1" ) == "1")? ti_requested.tduration / 1000 / 50000 : 0;
     m_reqComm.use64bit = g_conf.get( "use64bit", "0" ) == "1";
     m_reqComm.useUtc = true;
-    //m_reqComm.ipport = 6543;
+    if ( port.length() )
+        m_reqComm.ipport = std::stoi( port );
 
     Log().D1( strfmt("rtpReq.m_reqcb.seconsPerSample %d", m_reqComm.seconsPerSample ) );
 
@@ -129,7 +135,7 @@ void KSRequestSamplesLoop::run() {
         m_cancel = false;
         m_changed = false;
         trendsBuf.instanceOwn();
-        for ( uint32_t paramId : m_paramIds ) {
+        for ( std::string& paramId : m_paramIds ) {
             KSRtpSamplesBuf& samplesBuf = trendsBuf.get( paramId );
             if ( !samplesBuf.m_enabled )
                 continue;
@@ -153,7 +159,7 @@ void KSRequestSamplesLoop::run() {
 }
 
 
-void KSRequestSamplesLoop::addParamId(uint32_t dbParamId) {
+void KSRequestSamplesLoop::addParamId( const std::string& dbParamId) {
     m_paramIds.push_back( dbParamId );
 }
 

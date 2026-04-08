@@ -96,21 +96,21 @@ int CLFdWait( int fd, int timeout ) {
 }
 
 
-std::string sockaddr_to_string(const struct sockaddr* sa, bool port ) {
+std::string sockaddr_to_string(const struct sockaddr* sadr, bool port ) {
 
     char buffer[64];
     const size_t buflen = sizeof( buffer );
 
-    if (sa->sa_family == AF_INET) {
-        struct sockaddr_in *ipv4 = (struct sockaddr_in *)sa;
+    if (sadr->sa_family == AF_INET) {
+        struct sockaddr_in *ipv4 = (struct sockaddr_in *)sadr;
         char ip_str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(ipv4->sin_addr), ip_str, INET_ADDRSTRLEN);
         if ( port )
             snprintf(buffer, buflen, "%s:%d", ip_str, ntohs(ipv4->sin_port));
         else
             snprintf(buffer, buflen, "%s", ip_str );
-    } else if (sa->sa_family == AF_INET6) {
-        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)sa;
+    } else if (sadr->sa_family == AF_INET6) {
+        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)sadr;
         char ip_str[INET6_ADDRSTRLEN];
         inet_ntop(AF_INET6, &(ipv6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
         if ( port )
@@ -118,7 +118,7 @@ std::string sockaddr_to_string(const struct sockaddr* sa, bool port ) {
         else
             snprintf(buffer, buflen, "[%s]", ip_str );
     } else {
-        snprintf(buffer, buflen, "Unknown address family (%d)", sa->sa_family);
+        snprintf(buffer, buflen, "Unknown address family (%d)", sadr->sa_family);
     }
     std::string res( buffer );
     return res;

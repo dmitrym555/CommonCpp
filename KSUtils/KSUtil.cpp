@@ -157,13 +157,15 @@ std::string& trim(std::string& s, const char* t)
 }
 
 int KSStrToInt( const std::string& str ) {
-    return KSStrToIntPos( str, nullptr );
+    return KSStrToInt( str, 0 );
 }
 
 int KSStrToIntPos( const std::string& str, size_t* pos ) {
     int res = 0;
     if ( str.starts_with("0x") ) {
-        res = std::stoi( str.substr(2), pos, 16 );
+        std::string lower = str.substr(2);
+        //strToLower( lower );
+        res = std::stoi( lower, pos, 16 );
     }
     else {
         res = str.length()? std::stoi( str, pos, 10 ) : 0;
@@ -205,7 +207,7 @@ bool KSAssignStr( std::string& dst, const std::string& src ) {
 }
 
 int KSStrToInt( const std::string& str, int defVal ) {
-    int res = KSStrToInt(str);
+    int res = KSStrToInt( (std::string_view) str, defVal );
     return (res == 0 )? defVal : res;
 }
 
@@ -466,6 +468,14 @@ int keyval( const std::string& str, const std::string& delimiter, int& outval ) 
     outval = KSStrToInt( val );
     return res;
 }
+
+std::string keyval( const std::string& str, const std::string& delimiter, uint32_t& outval ) {
+    std::string val;
+    std::string key = keyval( str, delimiter, val );
+    outval = KSStrToInt64( val, 0 );
+    return key;
+}
+
 
 std::string KSStrRightDrop( const std::string& str, const std::string& delimiter, int index ) {
     if ( index < 0 )
@@ -818,4 +828,15 @@ void CLpwdstring::destroy() {
 
 CLpwdstring::~CLpwdstring() {
     destroy();
+}
+
+bool isGuid( const std::string& guid ) {
+    //D9544A3F-B11A-4292-AACD-B206830FB7C0
+    const int guidSize = 2*(4+6+6) + 4;
+    if ( guid.length() != guidSize )
+        return false;
+    std::vector<std::string> parts = split( guid, (std::string)"-" );
+    if ( parts.size() != 5 )
+        return false;
+    return true;
 }

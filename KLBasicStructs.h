@@ -68,24 +68,37 @@ struct KLPARAM : public KLParamH
     }
 };
 
-struct CCLPARAM : public KLParamH
+struct CLPARAM : public KLParamH
 {
     union {
         double     dval;
         byte       Boolean;
-        int64_t    Integer;
+        int64_t    Integer = 0;
         uint64_t   DateTime;
         size_t     strLen;
     } Value;
 
-    bool operator == (const CCLPARAM& other ) const {
+    bool operator == (const CLPARAM& other ) const {
         return ( 0 == memcmp( this, &other, sizeof(*this) ) );
     }
 };
 
-struct CCLPARAMTS: public CCLPARAM
+struct CLPARAMTS: public CLPARAM
 {
     uint64_t     timestamp;
+};
+
+struct CLPARAMWithId: public CLPARAMTS
+{
+    word         IecId;
+};
+
+struct CLPARAMDIFF
+{
+    float      aperture = 0.05;
+    int64_t    apertures = 0;
+
+    CLPARAMWithId  clptid;
 };
 
 struct KSPARAM : public KLParamH

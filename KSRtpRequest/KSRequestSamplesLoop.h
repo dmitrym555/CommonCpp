@@ -28,7 +28,7 @@ class KSRequestSamplesLoop {
     std::condition_variable cv;
     std::mutex m_cvmutex;
 
-    std::vector<uint32_t>  m_paramIds;
+    std::vector<std::string>  m_paramIds;
     std::atomic<int> m_trendsThreadCounter = 0;
 
     KSRtpRequestCBComm m_reqComm;
@@ -40,7 +40,7 @@ class KSRequestSamplesLoop {
 public:
     std::string m_binPath;
 
-    void runTrend( uint32_t dbParamId );
+    void runTrend( const std::string& dbParamId );
 
     void reloadConfig();
     void setConfig(const std::string& dbAlias);
@@ -55,7 +55,7 @@ public:
 
     void resetIds() { m_paramIds.clear(); }
 
-    void addParamId(uint32_t dbParamId);
+    void addParamId( const std::string& dbParamId);
 
     void resetFilled();
 };

@@ -222,7 +222,7 @@ void KSRtpRequest::run(const bool& cancel ) {
         m_reqcb.samplesLimit = std::min( maxBlockSize/m_reqcb.getSampleValueSize(), (2*speedAvg + speedBlock)*2 + minBlockSize / m_reqcb.getSampleValueSize() );
         Log().D( 6, strfmt( "speedAvg %d speedBlock %d samplesInBlock %d newSamplesLimit %d ", speedAvg, speedBlock, m_reqcb.samplesInBlock, m_reqcb.samplesLimit ) );
 
-        KSRtpSamplesBuf& samplesBuf = trendsBuf.get( m_reqcb.dbParamId );
+        KSRtpSamplesBuf& samplesBuf = trendsBuf.get( m_reqcb.getSignalId() );
 
         for ( dword i=0; i < m_reqcb.samplesInBlock; ++i ) {
             KSRtpParamValue32& sample32 = *(KSRtpParamValue32*)( recvBuff + processPosition + i*m_reqcb.getSampleValueSize());

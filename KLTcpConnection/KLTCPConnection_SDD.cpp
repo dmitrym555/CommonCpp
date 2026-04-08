@@ -1,18 +1,17 @@
 //
+// Data access server project
 // Author: Dmitry Melnik
 //
 
-#include "CLTCPConnection.h"
+#include "KLTCPConnection_SDD.h"
 
-//#include "KSTargetProto.h"
+#include "KLTargetConnection.h"
+#include "KSTargetProto.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#include <netdb.h>
-
 #include <fcntl.h>
 #include <poll.h>
 #include <time.h>
@@ -26,15 +25,13 @@
 
 #include "../../CommonCpp/Platform/Platform.h"
 
-#include <cstring>
-
 #define LOGSRC 0
 
 
-class CLTCPConnectionLinuxImpl : public CLTCPConnection
+class KLTCPConnectionLinuxImpl : public KLTCPConnection
 {
     std::string m_ipaddr;
-    uint16_t m_ipport;
+    short m_ipport;
     int m_sock;
     bool m_connected;
     bool dataWasReceived;
@@ -45,8 +42,8 @@ class CLTCPConnectionLinuxImpl : public CLTCPConnection
     int   m_copiedBufPointer = 0;
 
 public:
-    void init(const std::string& ipaddr, uint16_t port) override;
-    virtual int connect(int timeout=5000) override;
+    void init(const std::string& ipaddr, short port) override;
+    virtual int connect(int timeout, KSUDPTCP type) override;
     virtual int connectWithSocket(int socket) override;
     virtual void disconnect() override;
     virtual int send(byte* buf, int reqlen, bool dontcallback=false) override;
@@ -62,36 +59,41 @@ public:
     virtual void resetRecieve() override;
     virtual int receiveSync(byte* buf, int sz, int timeoutperbyte ) override;
     virtual int checkInpData() override;
-    virtual int readData( byte* recbuf, size_t recBufSize ) override;
 
-    CLTCPConnectionLinuxImpl();
-    virtual ~CLTCPConnectionLinuxImpl() override;
+    KLTCPConnectionLinuxImpl();
+    virtual ~KLTCPConnectionLinuxImpl() override;
 };
 
-CLTCPConnectionLinuxImpl::CLTCPConnectionLinuxImpl() {
+KLTCPConnectionLinuxImpl::KLTCPConnectionLinuxImpl() {
     m_recvBuf = new byte[recvBufSize];
     m_connected = false;
     m_whenWasConnected = 0;
     dataWasReceived = false;
 }
 
-CLTCPConnectionLinuxImpl::~CLTCPConnectionLinuxImpl() {
+KLTCPConnectionLinuxImpl::~KLTCPConnectionLinuxImpl() {
     disconnect();
     delete [] m_recvBuf;
 }
 
-CLTCPConnection* CLTCPConnection::create(int impl) {
-    CLTCPConnectionLinuxImpl* res = new CLTCPConnectionLinuxImpl();
+KLTCPConnection* KLTCPConnection::create(int impl) {
+    KLTCPConnectionLinuxImpl* res = new KLTCPConnectionLinuxImpl();
     return res;
 }
 
-void CLTCPConnectionLinuxImpl::init(const std::string& ipaddr, uint16_t port) {
+void KLTCPConnectionLinuxImpl::init(const std::string& ipaddr, short port) {
     m_ipaddr = ipaddr;
     m_ipport = port;
 }
 
-
-int CLTCPConnectionLinuxImpl::waitForIncomingData(int timeout) {
+int KLTCPConnectionLinuxImpl::waitForIncomingData(int timeout) {
+//    fd_set readset;
+//    FD_ZERO(&readset);
+//    FD_SET(m_sock, &readset);
+//    timeval time_wait;
+//    time_wait.tv_sec = timeout/1000;
+//    time_wait.tv_usec = (timeout%1000)*1000;
+//    int res = select(m_sock+1, &readset, NULL, NULL, &time_wait);
 
     struct pollfd pfd;
     pfd.fd = m_sock;
@@ -108,12 +110,12 @@ int CLTCPConnectionLinuxImpl::waitForIncomingData(int timeout) {
     return res;
 }
 
-void CLTCPConnectionLinuxImpl::resetRecieve() {
+void KLTCPConnectionLinuxImpl::resetRecieve() {
     m_copiedBufPointer = m_recvBufPointer = 0;
 }
 
 
-int CLTCPConnectionLinuxImpl::receiveSync(byte* buf, int sz, int timeoutperbyte ) {
+int KLTCPConnectionLinuxImpl::receiveSync(byte* buf, int sz, int timeoutperbyte ) {
 
     if ( sz == 0 )
         return 0;
@@ -148,7 +150,7 @@ int CLTCPConnectionLinuxImpl::receiveSync(byte* buf, int sz, int timeoutperbyte 
     return sz;
 }
 
-int CLTCPConnectionLinuxImpl::connectWithSocket(int socket) {
+int KLTCPConnectionLinuxImpl::connectWithSocket(int socket) {
     disconnect();
     m_sock = socket;
     m_connected = true;
@@ -157,7 +159,7 @@ int CLTCPConnectionLinuxImpl::connectWithSocket(int socket) {
 }
 
 
-int CLTCPConnectionLinuxImpl::connect(int timeout) {
+int KLTCPConnectionLinuxImpl::connect(int timeout, KSUDPTCP type) {
     if ( m_connected )
         return 0;
     struct sockaddr_in addr;
@@ -167,31 +169,11 @@ int CLTCPConnectionLinuxImpl::connect(int timeout) {
         return -1;
     }
 
-    struct addrinfo hints;
-    struct addrinfo* result;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;       // Request IPv4 addresses
-    hints.ai_socktype = SOCK_STREAM; // Request stream socket (TCP)
-    hints.ai_protocol = IPPROTO_TCP;
-
-    std::string sipport = std::format("{}", m_ipport);
-
-    int status = getaddrinfo(m_ipaddr.c_str(), sipport.c_str(), &hints, &result);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(m_ipport);
+    addr.sin_addr.s_addr = inet_addr( m_ipaddr.c_str() );
 
     std::string dest = std::format( "{}:{}", m_ipaddr, m_ipport );
-
-    if (status != 0) {
-        Log().L( DLE, LOGSRC, std::format( "{}::{} Direct connection to {} {} {}", KSMETHOD, dest, m_targetId, gai_strerror(status) ) );
-        return 1;
-    }
-
-    memcpy(&addr, result->ai_addr, sizeof(struct sockaddr_in));
-
-    //addr.sin_family = AF_INET;
-    //addr.sin_port = htons(m_ipport);
-    //addr.sin_addr.s_addr = inet_addr( m_ipaddr.c_str() );
-
     Log().L( DL1, LOGSRC, std::format( "{}::{} Direct connection to {} {}", KSMETHOD, dest, m_targetId ) );
 
     //int reuse = 1;
@@ -223,7 +205,7 @@ int CLTCPConnectionLinuxImpl::connect(int timeout) {
     return 1;
 }
 
-void CLTCPConnectionLinuxImpl::disconnect() {
+void KLTCPConnectionLinuxImpl::disconnect() {
     if (!m_connected)
         return;
     m_connected = false;
@@ -235,45 +217,14 @@ void CLTCPConnectionLinuxImpl::disconnect() {
     //((KSTargetProto*)m_proto)->disconnect();
 }
 
-int CLTCPConnectionLinuxImpl::checkInpData() {
+int KLTCPConnectionLinuxImpl::checkInpData() {
     byte buf[1];
     int res = recv(m_sock, buf, sizeof(buf), MSG_PEEK | MSG_DONTWAIT );
     return res;
 }
 
 
-int CLTCPConnectionLinuxImpl::readData( byte* recbuf, size_t recBufSize ) {
-    struct pollfd pfd;
-    pfd.fd = m_sock;
-    pfd.events = POLLIN;
-    int waitres = poll( &pfd, 1, 1000 );
-    int recvres = 0;
-
-    if ( waitres < 0 ) {
-        disconnect();
-        return -1;
-    }
-
-    if ( waitres == 0 )
-        return 0;
-
-    recvres = recv(m_sock, recbuf, recBufSize, MSG_DONTWAIT | MSG_NOSIGNAL);
-
-    if ( recvres <= 0 ) {
-        int error_code;
-        int error_code_size = sizeof( error_code );
-        getsockopt(m_sock, SOL_SOCKET, SO_ERROR, &error_code, (socklen_t*)&error_code_size);
-
-        Log().L( DLW, LOGSRC, std::format("{}::{} socket reading error {} on {}:{} socket {} {}", KSMETHOD, error_code, m_ipaddr, m_ipport, m_sock, m_targetId ) );
-        disconnect();
-        return -1;
-    }
-
-    return recvres;
-}
-
-
-int CLTCPConnectionLinuxImpl::processIncoming( int startParam ) {
+int KLTCPConnectionLinuxImpl::processIncoming( int startParam ) {
     const int recBufSize = 4096*16;
     byte recbuf[recBufSize];
 
@@ -304,13 +255,13 @@ int CLTCPConnectionLinuxImpl::processIncoming( int startParam ) {
     }
 
     if ( m_connected ) {
-        //if ( m_proto )
-        //    ((KSTargetProto*)m_proto)->processIncoming( recbuf, recvres, startParam );
+        if ( m_proto )
+            ((KSTargetProto*)m_proto)->processIncoming( recbuf, recvres, startParam );
     }
     return recvres;
 }
 
-int CLTCPConnectionLinuxImpl::send( byte* buf, int reqlen, bool dontcallback ) {
+int KLTCPConnectionLinuxImpl::send( byte* buf, int reqlen, bool dontcallback ) {
 
     int res = ::send( m_sock, buf, reqlen, MSG_NOSIGNAL );
 
@@ -326,7 +277,6 @@ int CLTCPConnectionLinuxImpl::send( byte* buf, int reqlen, bool dontcallback ) {
         res = processIncoming(0);
     return res;
 }
-
 
 
 

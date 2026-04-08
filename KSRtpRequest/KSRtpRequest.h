@@ -9,6 +9,8 @@
 
 #include "../../CommonCpp/KLTcpConnection/KLTCPConnection.h"
 
+#include <format>
+
 
 struct KSRtpRequestCBComm {
     std::string ipaddr = "10.0.0.134";
@@ -32,6 +34,11 @@ struct KSRtpRequestCB : public KSRtpReadSamplesReqStruct {
     int     dbParamId;
     std::string error;
     std::string json;
+
+    std::string getSignalId() {
+        std::string res = std::format( "{}#{}", comm.dbGuid, dbParamId );
+        return res;
+    }
 
     byte  getSampleValueSize() {  return comm.use64bit? sizeof(KSRtpParamValue) : sizeof(KSRtpParamValue32); }
 };

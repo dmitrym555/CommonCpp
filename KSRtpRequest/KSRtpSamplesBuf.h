@@ -66,8 +66,8 @@ public:
 
 
 class KSTrendsBuf {
-    std::map< uint32_t, KSRtpSamplesBuf>  m_pool;
-    std::vector< uint32_t > m_ids;
+    std::map< std::string, KSRtpSamplesBuf>  m_pool;
+    std::vector< std::string > m_ids;
     std::mutex m_mutex;
     std::mutex m_instanceMutex;
 
@@ -76,12 +76,12 @@ class KSTrendsBuf {
     void markToReset();
 
 public:
-    KSRtpSamplesBuf& get( uint32_t dbParamId );
-    uint32_t getParIdByIndex(int index);
+    KSRtpSamplesBuf& get( const std::string& dbParamId );
+    std::string getParIdByIndex(int index);
     int getTrendsCount();
     void setMinTimeSpan( int timespan );
     void resetData();
-    void setTrend( int idx, uint32_t dbParamId, uint32_t color );
+    void setTrend( int idx, const std::string& dbParamId, uint32_t color );
     void clearTrends();
     void toggleTrend(int idx);
     void zoomInNotify();
