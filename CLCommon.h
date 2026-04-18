@@ -25,7 +25,7 @@ public:
     void CLMain();
 };
 
-void CLInit();
+void CLInit(const std::string& unitName="CLCommon");
 
 extern CLCommon clCommon;
 

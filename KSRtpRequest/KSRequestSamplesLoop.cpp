@@ -47,7 +47,7 @@ void KSRequestSamplesLoop::runTrend( const std::string& argdbParamId ) {
     uint32_t dbParamId;
     std::string dbGuid = keyval( argdbParamId, "#", dbParamId );
     // do random sleep to reduce network racing condition probability
-    int randomSleep = 5 * (dbParamId % 10);
+    int randomSleep = KSRandom( 250 ); //5 * (dbParamId % 10);
     Log().D1( strfmt( "random sleep: %d", randomSleep ) );
     KSsleep( randomSleep );
 
@@ -135,14 +135,28 @@ void KSRequestSamplesLoop::run() {
         m_cancel = false;
         m_changed = false;
         trendsBuf.instanceOwn();
+
+        std::map< std::string, std::vector<std::string>> groupedByDb;
+
         for ( std::string& paramId : m_paramIds ) {
-            KSRtpSamplesBuf& samplesBuf = trendsBuf.get( paramId );
-            if ( !samplesBuf.m_enabled )
-                continue;
-            ++m_trendsThreadCounter;
-            std::thread thread_obj( &KSRequestSamplesLoop::runTrend, this, paramId );
-            thread_obj.detach();
-            //KSRequestSamplesLoop::runTrend( paramId );
+            std::string val;
+            std::string dbId = keyval( paramId, "#", val );
+            groupedByDb[dbId].push_back( paramId );
+        }
+
+        for ( const auto& [dbId, paramIds] : groupedByDb ) {
+            for ( const std::string& paramId : paramIds ) {
+                KSRtpSamplesBuf& samplesBuf = trendsBuf.get( paramId );
+                if ( !samplesBuf.m_enabled )
+                    continue;
+                ++m_trendsThreadCounter;
+                std::thread thread_obj( &KSRequestSamplesLoop::runTrend, this, paramId );
+                thread_obj.detach();
+                //KSRequestSamplesLoop::runTrend( paramId );
+            }
+            while ( !m_terminated && m_trendsThreadCounter > 0 ) {
+                KSsleep(2);
+            }
         }
 
         while ( !m_terminated && m_trendsThreadCounter > 0 ) {

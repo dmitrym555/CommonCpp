@@ -15,7 +15,7 @@ void sig_handler(int s) {
 }
 
 
-void CLInit() {
+void CLInit(const std::string& unitName ) {
 
     clCommon.binPath = getBinPath();
     clCommon.binPath = KSExtractFilePath( clCommon.binPath );
@@ -23,6 +23,6 @@ void CLInit() {
     signal (SIGINT,sig_handler);
     signal (SIGTERM,sig_handler);
 
-    Log().startFileLogging( clCommon.binPath );
+    Log().startFileLogging( std::format( "{}{}{}_logs", clCommon.binPath, psep(), unitName ) );
 }
 

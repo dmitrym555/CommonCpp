@@ -44,6 +44,7 @@
 
 #include "../Platform/Platform.h"
 
+#include <random>
 
 using namespace std::chrono;
 
@@ -760,10 +761,18 @@ std::string getFileExt( const std::string& fpath ) {
 }
 
 int KSRandom( int limit ) {
-
-    std::srand( std::time( {} ) );
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, limit);
+    int rres = distrib(gen);
+/*
+    static bool seeded = false;
+    if ( !seeded ) {
+        seeded = true;
+        std::srand( std::time( {} ) );
+    }
     int rres = std::rand() % limit;
-
+*/
     return rres;
 }
 

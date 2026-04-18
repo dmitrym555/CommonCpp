@@ -190,7 +190,7 @@ std::string KSPARAM::displayString() {
 std::string KSPARAM::getString() {
     std::string res = "0";
     if ( Type == KLIOTYPE_FLOAT ) {
-        res = std::isnan(Value.Double)? "-1": strfmt( "%.5g", Value.Double );
+        res = std::isnan(Value.Double)? "-1": ksDoubleToStr(Value.Double);
     }
     else if ( Type == KLIOTYPE_INTEGER ) {
         res = strfmt( "%d", Value.Integer );
