@@ -14,6 +14,8 @@
 
 #include "Platform/Platform.h"
 
+#include <functional>
+
 #ifndef TKSRtpParamId
 typedef uint32_t TKSRtpParamId;
 #endif
@@ -60,6 +62,8 @@ struct KSRtpParamValueBase {
     };
 };
 
+enum class KSApiRequestCmd { start = 1, next = 2, resend = 3, close = 4 };
+
 struct KSRtpParamValueValue32;
 
 struct KSRtpParamValueValue64: public KSRtpParamValueBase {
@@ -84,6 +88,7 @@ struct KSRtpParamValueValue32: public KSRtpParamValueBase {
         uint32_t  uintval;
         bool      bval;
     } Value;                //  6
+    double getDVal() const;
     void setValue(const KSRtpParamValueValue64& val64);
 };
 
@@ -143,6 +148,7 @@ struct KSRtpBlobHeader {
     uint8_t       reserved[16-10];  // 16
 };
 
+typedef std::function<void()>  KSRtpClientUpdate;
 
 struct KSRtpReadSamplesReqStruct {
     int             cmd = 1;
@@ -155,7 +161,13 @@ struct KSRtpReadSamplesReqStruct {
     dword           samplesLimit = 3000;
     dword           secondsPerSample = 0;
     byte            value64 = 1;
-    KSDasapiId      dasapi;
+    bool            eof = false;
+    uint32_t        baseDay = 0;
+
+    KSRtpClientUpdate  clupdate;
+    void*           clientVector = nullptr;
+    byte*           sendBuf;
+    std::string     jansw;
 
     byte sampleSize() const {
         byte res = value64? sizeof(KSRtpParamValue) : sizeof(KSRtpParamValue32);
@@ -171,3 +183,4 @@ struct KSRtpReadSamplesReqStruct {
 
 
 #endif
+

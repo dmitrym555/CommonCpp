@@ -26,6 +26,7 @@ public:
     virtual void save() override;
     virtual void set( const char* name, const char* val ) override;
     virtual void set( const char* name, const std::string& val ) override;
+    virtual void mergeFrom( const std::string& confPath ) override;
 
     virtual std::string getFromSection( const char* section, const char* name, const char* defaultVal ) override;
 
@@ -47,6 +48,15 @@ void KSConfParserImpl::init( const std::string& confPath ) {
     m_conf.clear();
     m_sections.clear();
     m_path = confPath;
+}
+
+void KSConfParserImpl::mergeFrom( const std::string& confPath ) {
+    if ( !m_wasRead ) {
+        load();
+        m_wasRead = true;
+    }
+    m_path = confPath;
+    load();
 }
 
 void KSConfParserImpl::load() {

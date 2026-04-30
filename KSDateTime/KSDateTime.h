@@ -189,6 +189,7 @@ uint64_t KSTimeToUtc(uint64_t& kstime );
 
 std::string KSDayTime( uint64_t kstime );
 
+uint64_t jsisodt2kstime( const std::string& jsisodt );
 std::string isodatetime(std::chrono::system_clock::time_point* tp = nullptr);
 std::string standart_datetime(std::chrono::system_clock::time_point* tp = nullptr);
 std::string shortdatetime(std::chrono::system_clock::time_point* tp = nullptr );

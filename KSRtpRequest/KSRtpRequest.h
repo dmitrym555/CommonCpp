@@ -16,7 +16,7 @@ struct KSRtpRequestCBComm {
     std::string ipaddr = "10.0.0.134";
     std::string dbGuid;
     word ipport = 0x6543;
-    int     seconsPerSample = 0;
+    int     secondsPerSample = 0;
     bool    use64bit = false;
     bool    useUtc = true;
 };
@@ -64,4 +64,5 @@ public:
 
 
 #endif
+
 

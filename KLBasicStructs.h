@@ -85,12 +85,12 @@ struct CLPARAM : public KLParamH
 
 struct CLPARAMTS: public CLPARAM
 {
-    uint64_t     timestamp;
+    uint64_t     timestamp = 0;
 };
 
 struct CLPARAMWithId: public CLPARAMTS
 {
-    word         IecId;
+    word         IecId = 0;
 };
 
 struct CLPARAMDIFF

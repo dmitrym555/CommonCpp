@@ -170,7 +170,8 @@ HttpRequest HttpRequest::string_to_request(const std::string_view& request_strin
 
     rpos = request_string.find("\r\n", lpos);
     if (rpos == std::string::npos) {
-        throw std::invalid_argument("Could not find request start line");
+        //throw std::invalid_argument("Could not find request start line");
+        rpos = request_string.length();
     }
 
     start_line = request_string.substr(lpos, rpos - lpos);

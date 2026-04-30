@@ -115,6 +115,20 @@ void KSRtpParamValueValue64::setValue(const KSRtpParamValueValue64& val) {
 }
 
 
+double KSRtpParamValueValue32::getDVal() const {
+    double res = 0;
+    if ( bitflags.type == KLIOTYPE_FLOAT ) {
+        return Value.fval;
+    }
+    else if ( bitflags.type == KLIOTYPE_INTEGER ) {
+        return Value.ival;
+    }
+    else if ( bitflags.type == KLIOTYPE_BOOLEAN ) {
+        return Value.bval;
+    }
+    return res;
+}
+
 void KSRtpParamValueValue32::setValue(const KSRtpParamValueValue64& val) {
     if ( val.bitflags.type == KLIOTYPE_FLOAT )
         Value.fval = (float)val.Value.dval;
@@ -173,6 +187,11 @@ void KSPARAM::Assign(const KSPARAM& other) {
         else if ( thisType == KLIOTYPE_FLOAT ) {
             if ( other.Type == KLIOTYPE_INTEGER ) {
                 this->Value.Double = other.Value.Integer;
+            }
+        }
+        else if ( thisType == KLIOTYPE_BOOLEAN ) {
+            if ( other.Type == KLIOTYPE_FLOAT ) {
+                this->Value.Boolean = (other.Value.Double != 0.0);
             }
         }
     }

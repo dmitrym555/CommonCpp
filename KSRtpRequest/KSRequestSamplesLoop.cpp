@@ -154,9 +154,9 @@ void KSRequestSamplesLoop::run() {
                 thread_obj.detach();
                 //KSRequestSamplesLoop::runTrend( paramId );
             }
-            while ( !m_terminated && m_trendsThreadCounter > 0 ) {
-                KSsleep(2);
-            }
+            //while ( !m_terminated && m_trendsThreadCounter > 0 ) {
+            //    KSsleep(2);
+            //}
         }
 
         while ( !m_terminated && m_trendsThreadCounter > 0 ) {

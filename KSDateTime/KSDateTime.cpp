@@ -395,6 +395,16 @@ std::string KSDayTime( uint64_t kstime )
     return res;
 }
 
+uint64_t jsisodt2kstime( const std::string& jsisodt ) {
+    if ( (jsisodt.length() < 19) || (jsisodt.length() > 24) )
+        return 0;
+    std::string strcopy = jsisodt;
+    strcopy[10] = ' ';
+    uint64_t res = KSTime( strcopy );
+    KSTimeToLocal( res );
+    return res;
+}
+
 std::string isodatetime(std::chrono::system_clock::time_point* tp ) {
     auto const now = (tp)? *tp : std::chrono::system_clock::now();
     std::time_t newt = std::chrono::system_clock::to_time_t(now);

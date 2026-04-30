@@ -19,6 +19,8 @@ public:
     virtual void set( const char* name, const char* val )=0;
     virtual void set( const char* name, const std::string& val )=0;
 
+    virtual void mergeFrom( const std::string& confPath )=0;
+
     static KSConfParser* inst();
     virtual ~KSConfParser() {}
 };

@@ -20,8 +20,8 @@ void CLInit(const std::string& unitName ) {
     clCommon.binPath = getBinPath();
     clCommon.binPath = KSExtractFilePath( clCommon.binPath );
 
-    signal (SIGINT,sig_handler);
-    signal (SIGTERM,sig_handler);
+    signal(SIGINT,sig_handler);
+    signal(SIGTERM,sig_handler);
 
     Log().startFileLogging( std::format( "{}{}{}_logs", clCommon.binPath, psep(), unitName ) );
 }

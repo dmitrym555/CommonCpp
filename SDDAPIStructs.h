@@ -121,7 +121,6 @@ typedef uint64_t KSFILETIME;
 
 #include <charconv>
 
-enum class KSApiRequestCmd { start = 1, next = 2, resend = 3, close = 4 };
 
 struct KSDASRequestHeader {
     uint32_t fnubmer = 0;
