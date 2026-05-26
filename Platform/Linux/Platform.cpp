@@ -49,11 +49,38 @@ int KSGetThreadId() {
 
 
 std::string execShellCmd( const std::string& cmd, int timeout ) {
-    system( cmd.c_str() );
+//    system( cmd.c_str() );
+//    std::string result = "";
+//    return result;
 
-    std::string result = "";
 
-    return result;
+    setenv( "LD_LIBRARY_PATH", "", 1);
+
+    FILE* pipe = popen( cmd.c_str(), "r" );
+
+    std::string res;
+
+    if (!pipe) {
+        return res;
+    }
+
+    char buf[32768];
+    size_t bytesread;
+    size_t bufferpointer=0;
+
+    //KSsleep( 2000 );
+
+    while ( (bytesread = fread( buf + bufferpointer, 1, sizeof( buf ) - bufferpointer, pipe )) > 0 ) {
+        bufferpointer += bytesread;
+    }
+    pclose( pipe );
+
+    //setenv( "LD_LIBRARY_PATH", "/opt/kaskad/daserver/glibc:/opt/kaskad/firebird/lib:/lib64:/usr/lib64", 1 );
+
+    res.resize( bufferpointer );
+    memcpy( res.data(), buf, bufferpointer );
+    return res;
+
 }
 
 int CLMakeSocket( CLSocketType stype ) {
@@ -190,7 +217,7 @@ std::string getBinPath() {
 }
 
 std::string xclipGet() {
-    FILE* pipe = popen( "xsel -o -b", "r" );
+    FILE* pipe = popen( "xsel -o -b 2>/dev/null", "r" );
 
     std::string res;
 
@@ -209,7 +236,7 @@ std::string xclipGet() {
 }
 
 void xclipCopy( const std::string& str ) {
-    FILE* pipe = popen( "xsel -b", "w" );
+    FILE* pipe = popen( "xsel -b > /dev/null 2>&1", "w" );
 
     if (!pipe) {
         //std::cerr << "popen failed!" << std::endl;
@@ -274,3 +301,4 @@ int connect_with_timeout(int sockfd, const struct sockaddr* addr, socklen_t addr
     // Success
     return rc;
 }
+

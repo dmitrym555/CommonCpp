@@ -81,4 +81,8 @@ int removeOldFiles(const std::string& directoryPath, int daysOld);
 
 std::string KSLoadFromFileToString(const std::string& filename);
 
+void saveString(const std::string& text, const std::string& filename);
+
+std::string getElementValueFromXmlFile( const std::string& path, const std::string& elementName );
+
 #endif // KSUTIL_H

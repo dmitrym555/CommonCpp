@@ -568,7 +568,7 @@ void ksMemCpy(void* dst, const void* src, dword len, int& pointer) {
 
 std::string ksDoubleToStr( double d ) {
     //std::string sd = std::format( "{:.5g}", d );
-    std::string res = std::isfinite( d )? std::format( "{:.5f}", d ) : "0";
+    std::string res = std::isfinite( d )? std::format( "{:.5g}", d ) : "0";
     return res;
 }
 

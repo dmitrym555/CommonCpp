@@ -73,3 +73,23 @@ std::string KSLoadFromFileToString(const std::string& filename) {
     return res;
 }
 
+void saveString(const std::string& text, const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (outFile) {
+        outFile << text;
+    }
+}
+
+std::string getElementValueFromXmlFile( const std::string& path, const std::string& elementName ) {
+    std::string filestr = KSLoadFromFileToString( path );
+    std::string strtofind = std::format( "<{}>", elementName );
+    size_t pos = filestr.find( strtofind );
+    if ( pos == std::string::npos )
+        return "";
+    size_t posend = filestr.find( "<", pos + strtofind.length() );
+    if ( posend == std::string::npos )
+        return "";
+    std::string res = filestr.substr( pos + strtofind.length(), posend - pos - strtofind.length() );
+    return res;
+}
+
