@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <string>
 
+#include <cstddef>
+
 #ifndef word
 typedef unsigned short word;
 #endif
@@ -45,7 +47,7 @@ struct KSGUID {
     dword Data1;
     word  Data2;
     word  Data3;
-    byte  Data4[8];
+    BYTE  Data4[8];
 
     void fromStr( const char* guid );
     void toChars( char* guid );

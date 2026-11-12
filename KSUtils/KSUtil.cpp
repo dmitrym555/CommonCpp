@@ -65,8 +65,22 @@ void KSSleepFinish() {
 }
 
 void KSsleep(int sleepForMs) {
-    if ( KSAllowSleep )
-        std::this_thread::sleep_for( std::chrono::milliseconds( sleepForMs ) );
+    if ( KSAllowSleep ) {
+        struct timespec req = { .tv_sec = sleepForMs / 1000, .tv_nsec = (sleepForMs % 1000) * 1000 };
+        struct timespec rem;
+
+        while (nanosleep(&req, &rem) == -1) {
+            if (errno == EINTR) {
+                // Signal 2 caught; copy remaining time to 'req' to continue
+                req = rem;
+            } else {
+                // Handle other unexpected errors (e.g., EFAULT, EINVAL)
+                break;
+            }
+        }
+
+        //std::this_thread::sleep_for( std::chrono::milliseconds( sleepForMs ) );
+    }
 }
 
 void KSsleep( int sleepForMs, bool& cancel ) {

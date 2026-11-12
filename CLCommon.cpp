@@ -7,7 +7,7 @@
 #include "KSEventLog/KSEventLog.h"
 
 #include <signal.h>
-
+#include <format>
 
 void sig_handler(int s) {
     Log().I("Caught signal %d",s);

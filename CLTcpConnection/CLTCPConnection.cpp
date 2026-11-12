@@ -257,19 +257,24 @@ int CLTCPConnectionLinuxImpl::readData( byte* recbuf, size_t recBufSize ) {
     if ( waitres == 0 )
         return 0;
 
-    recvres = recv(m_sock, recbuf, recBufSize, MSG_DONTWAIT | MSG_NOSIGNAL);
+    int recvPtr = 0;
+    do {
+        recvres = recv( m_sock, recbuf + recvPtr, recBufSize - recvPtr, MSG_DONTWAIT | MSG_NOSIGNAL );
 
-    if ( recvres <= 0 ) {
-        int error_code;
-        int error_code_size = sizeof( error_code );
-        getsockopt(m_sock, SOL_SOCKET, SO_ERROR, &error_code, (socklen_t*)&error_code_size);
+        if ( recvres <= 0 ) {
+            int error_code;
+            int error_code_size = sizeof( error_code );
+            getsockopt(m_sock, SOL_SOCKET, SO_ERROR, &error_code, (socklen_t*)&error_code_size);
 
-        Log().L( DLW, LOGSRC, std::format("{}::{} socket reading error {} on {}:{} socket {} {}", KSMETHOD, error_code, m_ipaddr, m_ipport, m_sock, m_targetId ) );
-        disconnect();
-        return -1;
-    }
+            Log().L( DLW, LOGSRC, std::format("{}::{} socket reading error {} on {}:{} socket {} {}", KSMETHOD, error_code, m_ipaddr, m_ipport, m_sock, m_targetId ) );
+            disconnect();
+            return -1;
+        }
+        recvPtr += recvres;
+        KSsleep( 1000 );
+    } while ( 0 < checkInpData() );
 
-    return recvres;
+    return recvPtr;
 }
 
 

@@ -35,7 +35,12 @@ int CLJsonVal::getEl( size_t index, CLJsonVal& jval ) {
 }
 
 size_t CLJsonVal::getSize() {
-    size_t res = ((JsonBox::Value*)m_jv)->getArray().size();
+    JsonBox::Value* jbv = reinterpret_cast<JsonBox::Value*>(m_jv);
+    size_t res = 0;
+    if ( jbv->isArray() ) {
+        const std::vector<JsonBox::Value>& arr = jbv->getArray();
+        res = arr.size();
+    }
     return res;
 }
 

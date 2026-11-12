@@ -69,7 +69,7 @@ typedef struct _CP56TIME2A //
   BYTE year	:7;  // 55
   BYTE res4	:1;  // 56
 
-  void fromKSTime( uint64_t kstime );
+  void fromKSTime( uint64_t kstime, bool tolocal = true );
   uint64_t toKSTime();
 } CP56TIME2A;
 
@@ -125,7 +125,7 @@ struct KLTIME
     short  Msec;
     short  PrLZ;
 
-    void fromKSTime( uint64_t kstime );
+    void fromKSTime( uint64_t kstime, bool tolocal = true );
 };
 
 #pragma pack(pop)

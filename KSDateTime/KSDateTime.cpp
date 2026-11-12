@@ -519,11 +519,12 @@ void RDATETIME::fromKLDATETIME64( const KLDATETIME64& src ) {
     msec = src.sec*1000;
 }
 
-void KLTIME::fromKSTime( uint64_t kstime ) {
+void KLTIME::fromKSTime( uint64_t kstime, bool tolocal ) {
     auto tp2000 = std::chrono::system_clock::from_time_t( time_t2000() );
     auto tp1 = tp2000 + std::chrono::milliseconds( kstime );
     std::time_t newt = std::chrono::system_clock::to_time_t(tp1);
-    struct tm& t = *localtime(&newt);
+
+    struct tm& t = tolocal? *localtime(&newt) : *gmtime( &newt );
 
     Year = t.tm_year + 1900;
     Mon = t.tm_mon + 1;
@@ -534,11 +535,12 @@ void KLTIME::fromKSTime( uint64_t kstime ) {
     Msec = kstime % 1000;
 }
 
-void CP56TIME2A::fromKSTime( uint64_t kstime ) {
+void CP56TIME2A::fromKSTime( uint64_t kstime, bool tolocal ) {
     auto tp2000 = std::chrono::system_clock::from_time_t( time_t2000() );
     auto tp1 = tp2000 + std::chrono::milliseconds( kstime );
     std::time_t newt = std::chrono::system_clock::to_time_t(tp1);
-    struct tm& t = *localtime(&newt);
+
+    struct tm& t = tolocal? *localtime(&newt) : *gmtime( &newt );
 
     year = (t.tm_year + 1900) % 100;
     month = t.tm_mon + 1;

@@ -70,4 +70,8 @@ std::string xclipGet();
 
 int CLCreatePath( const std::string& dirPath );
 
+std::string KSExtractFilePath(const std::string& filePath);
+
+
 #endif
+
